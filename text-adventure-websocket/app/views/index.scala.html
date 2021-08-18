@@ -1,0 +1,217 @@
+@()
+
+@main("Adventure") {
+  <h1>Welcome to your Adventure</h1>
+
+  <div class="wrapper">
+    <div class="item1">
+        <h3>History</h3>
+        <p id="message-history"></p>
+    </div>
+
+    <div class="item2">
+        <h3>Situtation</h3>
+        <p id="game-messages">adventure text</p>
+    </div>
+
+    <div id="character-stats" class="item3">
+        <h3>Character</h3>
+        <p>Health: 10</p>
+        <p>Skill: 2</p>
+    </div>
+
+    <div id="items" class="item4">
+        <h3>Items</h3>
+        <p>Rope</p>
+    </div>
+
+    <div id="helper-text" class="item5">
+        <h3>Help</h3>
+        <ul>
+            <li>left</li>
+            <li>right</li>
+            <li>up</li>
+            <li>down</li>
+            <li>pickup &lt;item name&gt;</li>
+        </ul>
+    </div>
+    
+    <div id="input-text" class="item6">
+        <form onsubmit="buttonSubmit(); return false">
+            <label for="message-input">Action:</label>
+            <textarea id="message-input" ></textarea>
+            <button id="send-button">Send</button>
+        </form>
+    </div>
+
+    <div class="item7">
+        <h3>In Game Time</h3>
+        <p id="in-game-time"></p>
+    </div>
+  </div>
+    
+
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+  <script>
+    var webSocket;
+    var messageInput;
+
+    // initialize the WebSocket connection.
+    // note that i hard-code the server-side URL here.
+    function init() {
+        webSocket = new WebSocket("ws://localhost:9000/ws");
+        webSocket.onopen = onOpen;
+        webSocket.onclose = onClose;
+        webSocket.onmessage = onMessage;
+        webSocket.onerror = onError;
+        $("#message-input").focus();  // put initial input focus in the textarea
+    }
+
+    // debug code
+    function onOpen(event) {
+        consoleLog("CONNECTED");
+    }
+
+    // debug code
+    function onClose(event) {
+        consoleLog("DISCONNECTED");
+        appendClientMessageToView("DISCONNECTED");
+    }
+
+    // debug code
+    function onError(event) {
+        consoleLog("ERROR: " + event.data);
+        consoleLog("ERROR: " + JSON.stringify(event));
+    }
+
+    // this is where we receive a message from the server over
+    // the WebSocket connection
+    function onMessage(event) {
+        let receivedData = JSON.parse(event.data);
+        // get the text from the "body" field of the json we
+        // receive from the server
+        if (receivedData.body){
+            appendServerMessageToView(receivedData.body);    
+        }
+        if (receivedData.adventure_text){
+            setAdventureTextToServerMessage(receivedData.adventure_text);    
+        }
+        if (receivedData.time){
+            updateInGameTimeFromServerMessage(receivedData.time);    
+        }
+    }
+
+    // append “client” messages to the `message-content` div above
+    function appendClientMessageToView(message) {
+        $("#message-history").append("<span>" + "> " + message + "<br /></span>");
+    }
+
+    // append “server” messages to the `message-content` div above
+    function appendServerMessageToView(message) {
+        $("#message-history").append("<span>" + "> " + message + "<br /></span>");
+    }
+
+    // set the "server" message for the adventure text to the 'game-messages' div above
+    function setAdventureTextToServerMessage(message) {
+        $("#game-messages").text(message);
+    }
+
+    function updateInGameTimeFromServerMessage(message) {
+        var timeInGame = parseInt(message, 10);
+        var timeInDays = Math.floor(timeInGame/24);
+        var timeInHours = timeInGame % 24;
+        
+        var timeText = "";
+        //hours
+        if (timeInHours == 0){
+            timeText = "";
+        }else if (timeInHours == 1){
+            timeText = timeInHours + " hour";
+        }else{
+            timeText = timeInHours + " hours";
+        }
+
+        //seperation
+        if (timeInHours == 0 || timeInDays == 0){
+            
+        }else{
+            timeText += ", "
+        }
+
+        //days
+        if (timeInDays > 1){
+            timeText += timeInDays + " days";
+        }else if (timeInDays == 1){
+            timeText += timeInDays + " day";
+        }
+        $("#in-game-time").text(timeText);
+    }
+
+    // debug; log messages to the browser console
+    function consoleLog(message) {
+        console.log("New message: ", message);
+    }
+
+    // when the window is loaded, call the `init` function
+    window.addEventListener("load", init, false);
+
+    function buttonSubmit(){
+      consoleLog(messageInput);
+      getMessageAndSendToServer();
+      // put focus back in the textarea
+      $("#message-input").focus();
+    }
+
+    // also, act just like the Send button was clicked if the 
+    // user presses the <enter> key while in the textarea
+    $(window).on("keydown", function (e) {
+        if (e.which == 13) {
+            getMessageAndSendToServer();
+            return false;
+        }
+    });
+
+    // there’s a lot going on here:
+    // 1. get our message from the textarea.
+    // 2. append that message to our view/div.
+    // 3. create a json version of the message.
+    // 4. send the message to the server.
+    function getMessageAndSendToServer() {
+
+        // get the text from the textarea
+        messageInput = $("#message-input").val();
+
+        // clear the textarea
+        $("#message-input").val("");
+
+        // if the trimmed message was blank, return
+        if ($.trim(messageInput) == "") {
+            return false;
+        }
+
+        // add the message to the view/div
+        appendClientMessageToView(messageInput);
+
+        // create the message as json
+        let jsonMessage = {
+            message: messageInput
+        };
+
+        // send our json message to the server
+        sendToServer(jsonMessage);
+    }
+
+
+    // send the data to the server using the WebSocket
+    function sendToServer(jsonMessage) {
+        if(webSocket.readyState == WebSocket.OPEN) {
+            webSocket.send(JSON.stringify(jsonMessage));
+        } else {
+            consoleLog("Could not send data. Websocket is not open.");
+        }
+    }
+
+  </script>
+
+}
