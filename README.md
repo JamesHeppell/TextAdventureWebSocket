@@ -1,4 +1,6 @@
 # TextAdventureWebsocket
-To run 
+To run
+```bash
 $ cd .\text-adventure-webs
 $ sbt start
+```
