@@ -24,8 +24,12 @@ class SimpleWebSocketActor(clientActorRef: ActorRef) extends Actor {
             startGameTimerIfNotStarted()
             val clientMessage = getMessage(jsValue)
             val adventureText = "Hello Adventurer, journey ahead!"
-            val json: JsValue = Json.parse(s"""{"body": "You said, ‘$clientMessage’",
-                                                "adventure_text": "'$adventureText'"}""")
+            val characterHP:Int = 10
+            val items = ""
+            val json: JsValue = Json.parse(s"""{"history": "‘$clientMessage’",
+                                                "adventure_text": "'$adventureText'",
+                                                "characterHP":"'$characterHP'",
+                                                "items":"'$items'"}""")
             clientActorRef ! (json)
     }
 

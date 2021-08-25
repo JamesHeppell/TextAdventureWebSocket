@@ -1,7 +1,7 @@
 @()
 
 @main("Adventure") {
-  <h1>Welcome to your Adventure</h1>
+  <h1>Escape the Maze!</h1>
 
   <div class="wrapper">
     <div class="item1">
@@ -16,23 +16,22 @@
 
     <div id="character-stats" class="item3">
         <h3>Character</h3>
-        <p>Health: 10</p>
-        <p>Skill: 2</p>
+        <p id="character-health-string">Health: 10</p>
     </div>
 
     <div id="items" class="item4">
         <h3>Items</h3>
-        <p>Rope</p>
+        <p id="items-list">Rope</p>
     </div>
 
     <div id="helper-text" class="item5">
-        <h3>Help</h3>
+        <h3>Commands</h3>
         <ul>
-            <li>left</li>
-            <li>right</li>
-            <li>up</li>
-            <li>down</li>
-            <li>pickup &lt;item name&gt;</li>
+            <li>north (n)</li>
+            <li>south (s)</li>
+            <li>east (e)</li>
+            <li>west (w)</li>
+            <li>hint (h)</li>
         </ul>
     </div>
     
@@ -76,7 +75,7 @@
     // debug code
     function onClose(event) {
         consoleLog("DISCONNECTED");
-        appendClientMessageToView("DISCONNECTED");
+        appendClientMessageToView("DISCONNECTED - refresh page to start again");
     }
 
     // debug code
@@ -91,14 +90,20 @@
         let receivedData = JSON.parse(event.data);
         // get the text from the "body" field of the json we
         // receive from the server
-        if (receivedData.body){
-            appendServerMessageToView(receivedData.body);    
+        if (receivedData.history){
+            appendServerMessageToView(receivedData.history);    
         }
         if (receivedData.adventure_text){
             setAdventureTextToServerMessage(receivedData.adventure_text);    
         }
         if (receivedData.time){
             updateInGameTimeFromServerMessage(receivedData.time);    
+        }
+        if (receivedData.items){
+            updateItems(receivedData.items);
+        }
+        if (receivedData.characterHP){
+            updateCharacterHP(receivedData.characterHP);
         }
     }
 
@@ -115,6 +120,14 @@
     // set the "server" message for the adventure text to the 'game-messages' div above
     function setAdventureTextToServerMessage(message) {
         $("#game-messages").text(message);
+    }
+
+    function updateItems(messgae){
+        $("#items-list").text(message);
+    }
+
+    function updateCharacterHP(message){
+        $("#character-health-string").text(message);
     }
 
     function updateInGameTimeFromServerMessage(message) {
@@ -172,11 +185,9 @@
         }
     });
 
-    // there’s a lot going on here:
     // 1. get our message from the textarea.
-    // 2. append that message to our view/div.
-    // 3. create a json version of the message.
-    // 4. send the message to the server.
+    // 2. create a json version of the message.
+    // 3. send the message to the server.
     function getMessageAndSendToServer() {
 
         // get the text from the textarea
@@ -185,13 +196,10 @@
         // clear the textarea
         $("#message-input").val("");
 
-        // if the trimmed message was blank, return
-        if ($.trim(messageInput) == "") {
+        //check for valid messages only and if successful continue
+        if (!validInputMessage(messageInput)){
             return false;
         }
-
-        // add the message to the view/div
-        appendClientMessageToView(messageInput);
 
         // create the message as json
         let jsonMessage = {
@@ -202,6 +210,21 @@
         sendToServer(jsonMessage);
     }
 
+
+    // check if the action message is valid
+    function validInputMessage(messageInput){
+        // if the trimmed message was blank, return
+        if ($.trim(messageInput) == "") {
+            return false;
+        }
+        
+        //only allow key actions
+        if  ($.trim(messageInput) == "s"){
+            return true
+        }
+
+        return true
+    }
 
     // send the data to the server using the WebSocket
     function sendToServer(jsonMessage) {
