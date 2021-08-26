@@ -15,22 +15,33 @@ class SimpleWebSocketActor(clientActorRef: ActorRef) extends Actor {
     var isGameStarted: Boolean = false
     var inGameTime: Int = 0
 
+    var myGame = new Game()
 
     // this is where we receive json messages sent by the client
     // and send them a json reply
     def receive = {
         case jsValue: JsValue =>
             logger.info(s"JS-VALUE: $jsValue")
-            startGameTimerIfNotStarted()
-            val clientMessage = getMessage(jsValue)
-            val adventureText = "Hello Adventurer, journey ahead!"
-            val characterHP:Int = 10
-            val items = ""
-            val json: JsValue = Json.parse(s"""{"history": "‘$clientMessage’",
-                                                "adventure_text": "'$adventureText'",
-                                                "characterHP":"'$characterHP'",
-                                                "items":"'$items'"}""")
-            clientActorRef ! (json)
+            
+            val clientMessage = getMessage(jsValue)       
+            if (clientMessage == "start"){
+                myGame.hasStarted = true
+                startGameTimerIfNotStarted()
+            }
+            
+            if (myGame.hasStarted){
+                if (myGame.isValidAction(clientMessage)){
+                    myGame.changeStateFromAction(clientMessage)
+                    myGame.updateState()
+                    val json: JsValue = myGame.toJson(clientMessage)
+                    clientActorRef ! (json)    
+                }else{
+                    //todo error message to help player with bad messgaes.
+                    val json: JsValue = Json.parse(s"""{"history": "'$clientMessage' is not a valid action"}""")
+                    clientActorRef ! (json) 
+                }
+            }
+
     }
 
     // parse the "message" field from the json the client sends us
