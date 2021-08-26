@@ -16,7 +16,7 @@
 
     <div id="character-stats" class="item3">
         <h3>Character</h3>
-        <p id="character-health-string">Health: 10</p>
+        <p id="character-health-string">Health: 15</p>
     </div>
 
     <div id="items" class="item4">
@@ -121,15 +121,15 @@
 
     // set the "server" message for the adventure text to the 'game-messages' div above
     function setAdventureTextToServerMessage(message) {
-        $("#game-messages").text(message);
+        $("#game-messages").html(message);
     }
 
-    function updateItems(messgae){
+    function updateItems(message){
         $("#items-list").text(message);
     }
 
     function updateCharacterHP(message){
-        $("#character-health-string").text(message);
+        $("#character-health-string").text("Health: " + message);
     }
 
     function updateInGameTimeFromServerMessage(message) {

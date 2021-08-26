@@ -12,7 +12,7 @@ class SimpleWebSocketActor(clientActorRef: ActorRef) extends Actor {
     val logger = play.api.Logger(getClass)
 
     logger.info(s"SimpleWebSocketActor class started")
-    var isGameStarted: Boolean = false
+    var isTimerStarted: Boolean = false
     var inGameTime: Int = 0
 
     var myGame = new Game()
@@ -48,8 +48,9 @@ class SimpleWebSocketActor(clientActorRef: ActorRef) extends Actor {
     def getMessage(json: JsValue): String = (json \ "message").as[String]
     
     def startGameTimerIfNotStarted() = {
-        if (!isGameStarted) startInGameTimeAndMessages
-        isGameStarted = true
+        inGameTime = 0
+        if (!isTimerStarted) startInGameTimeAndMessages
+        isTimerStarted = true
     }
 
     // start in game time and send to client
