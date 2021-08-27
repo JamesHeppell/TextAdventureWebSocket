@@ -1,6 +1,6 @@
 package models
 
-class Character (var health:Int = 15, var items:String = "", var hasKey:Boolean = false) {
+class Character (var health:Int = 15, var items:String = " ", var hasKey:Boolean = false) {
     
     var maxHealth:Int = 15
 
@@ -15,7 +15,7 @@ class Character (var health:Int = 15, var items:String = "", var hasKey:Boolean 
           health += amount
     }
 
-    def isAlive(): Boolean={
+    def isDead(): Boolean={
         health <= 0
     }
 
@@ -26,12 +26,12 @@ class Character (var health:Int = 15, var items:String = "", var hasKey:Boolean 
 
     def useKey(){
         hasKey = false
-        items = ""
+        items = " "
     }
 
     def reset(){
         health = maxHealth
-        items = ""
+        items = " "
         hasKey = false
     }
 }

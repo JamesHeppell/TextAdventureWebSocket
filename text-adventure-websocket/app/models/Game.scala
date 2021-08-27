@@ -10,7 +10,7 @@ class Game {
       type GameState = Value
       val entrance, entrance_2, openbox_1, openbox_2, north, south_2, maze_1, west_2, fight_1, east, east_2,
         east_3, north_3, east_2_key, gate_key, openbox_3, passage_1, fight_witch, openbox_4, openbox_5,
-        west_3, east_4, fight_2, south_3, south_4, north_2, west_4, finish = Value
+        west_3, east_4, fight_2, south_3, south_4, north_2, west_4, finish, death = Value
   }
 
   object GameActions extends Enumeration{
@@ -75,6 +75,7 @@ class Game {
           case GameStates.north_2 => north_2()
           case GameStates.west_4 => west_4()
           case GameStates.finish => finish()
+          case GameStates.death => death()
           //catch the default with variable
           case whoa => println("Unexpected GameState: " + whoa.toString)
       }
@@ -109,6 +110,13 @@ class Game {
       contiuneActionLeadsTo = GameStates.maze_1
 
       character.decreaseHealth(1)
+      if (character.isDead){
+          gameText = "As you slowly open the box you near a hissing sounds inside, then then ouch! A snake" +
+                " has bitten your hand, loose one HP. As you try to put the lid back on the box you fall" +
+                " unconscious, <b>continue</b> to await your fate."
+          allowedActions = List(GameActions.continue)
+          contiuneActionLeadsTo = GameStates.death
+      }
   }
 
   def openbox_2(){
@@ -119,6 +127,13 @@ class Game {
       contiuneActionLeadsTo = GameStates.entrance_2
 
       character.decreaseHealth(1)
+      if (character.isDead){
+          gameText = "As you slowly open the box you near a hissing sounds inside, then then ouch! A snake" +
+                " has bitten your hand, loose one HP. As you try to put the lid back on the box you fall" +
+                " unconscious, <b>continue</b> to await your fate."
+          allowedActions = List(GameActions.continue)
+          contiuneActionLeadsTo = GameStates.death
+      }
   }
 
   def north(){
@@ -156,6 +171,12 @@ class Game {
       contiuneActionLeadsTo = GameStates.maze_1
 
       character.decreaseHealth(1)
+      if (character.isDead){
+          gameText = "As you slay the monster, you take a little damage and fall" +
+                " unconscious, <b>continue</b> to await your fate."
+          allowedActions = List(GameActions.continue)
+          contiuneActionLeadsTo = GameStates.death
+      }
   }
 
   def east(){
@@ -220,6 +241,13 @@ class Game {
       contiuneActionLeadsTo = GameStates.fight_witch
     
       character.decreaseHealth(character.maxHealth - character.health)
+      if (character.isDead){
+          gameText = "As you keep walking hoping the end is near, you hear the voice of an evil witch!" +
+                "'Ah so you made it through my little maze, I hope you didn't get bitten by my little snakes...'" +
+                " <br/> the vemon hurts you and you fall unconscious, <b>continue</b> to await your fate."
+          allowedActions = List(GameActions.continue)
+          contiuneActionLeadsTo = GameStates.death
+      }
   }
 
   def fight_witch(){
@@ -229,6 +257,12 @@ class Game {
       contiuneActionLeadsTo = GameStates.finish
 
       character.decreaseHealth(2)
+      if (character.isDead){
+          gameText = "After a long battle you slay the witch...and if by magic the exit reveals itself." +
+                " However, you sustained a few too many wounds and have fallen unconscious, <b>continue</b> to await your fate."
+          allowedActions = List(GameActions.continue)
+          contiuneActionLeadsTo = GameStates.death
+      }
   }
 
   def openbox_4(){
@@ -239,6 +273,13 @@ class Game {
       contiuneActionLeadsTo = GameStates.east_4
 
       character.decreaseHealth(1)
+      if (character.isDead){
+          gameText = "As you slowly open the box you near a hissing sounds inside, then then ouch! A snake" +
+                " has bitten your hand, loose one HP. As you try to put the lid back on the box you fall" +
+                " unconscious, <b>continue</b> to await your fate."
+          allowedActions = List(GameActions.continue)
+          contiuneActionLeadsTo = GameStates.death
+      }
   }
 
   def openbox_5(){
@@ -249,6 +290,13 @@ class Game {
       contiuneActionLeadsTo = GameStates.entrance_2
 
       character.decreaseHealth(1)
+      if (character.isDead){
+          gameText = "As you slowly open the box you near a hissing sounds inside, then then ouch! A snake" +
+                " has bitten your hand, loose one HP. As you try to put the lid back on the box you fall" +
+                " unconscious, <b>continue</b> to await your fate."
+          allowedActions = List(GameActions.continue)
+          contiuneActionLeadsTo = GameStates.death
+      }
   }
 
   def west_3(){
@@ -270,8 +318,6 @@ class Game {
       gameText = "As you slay the monster you <b>continue</b> back to the junction you came from."
       allowedActions = List(GameActions.continue)  
       contiuneActionLeadsTo = GameStates.east_4
-
-      character.decreaseHealth(1)
   }
 
   def south_3(){
@@ -309,6 +355,14 @@ class Game {
       hasStarted = false
   }
 
+  def death(){
+      gameText = "Unfortunately you have died, please try again and be careful which boxes you open!" +
+                 " Type <b>start</b> to retry."
+      allowedActions = List(GameActions.start)
+      hasStarted = false
+  }
+
+
   def changeStateFromAction(action: String){
       logger.info(s"client action is $action")
       action match {
@@ -319,6 +373,7 @@ class Game {
           case "c" => state = contiuneActionLeadsTo
           case "o" => state = openboxActionLeadsTo
           case "start" => state = GameStates.entrance
+          case _ => //nothing
       }
   }
 

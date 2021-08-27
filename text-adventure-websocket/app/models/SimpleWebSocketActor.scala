@@ -15,7 +15,22 @@ class SimpleWebSocketActor(clientActorRef: ActorRef) extends Actor {
     var isTimerStarted: Boolean = false
     var inGameTime: Int = 0
 
+    var timer = new java.util.Timer()
+    var taskSendingInGameTime = new java.util.TimerTask {
+            def run() = {
+                        sendInGameTime(inGameTime)
+                        inGameTime += 1
+                }
+        }
+
     var myGame = new Game()
+    var hints = List("Be careful which boxes you open",
+                     "The Key is somewhere in the north",
+                     "That's all the hints for now",
+                     "okay if you want the solution one more time",
+                     "n-c-e-n-o-c-c-c-c-c",
+                     "That was the last hint!")
+    var hintNumber:Int = 0
 
     // this is where we receive json messages sent by the client
     // and send them a json reply
@@ -25,6 +40,7 @@ class SimpleWebSocketActor(clientActorRef: ActorRef) extends Actor {
             
             val clientMessage = getMessage(jsValue)       
             if (clientMessage == "start"){
+                hintNumber = 0
                 myGame.hasStarted = true
                 startGameTimerIfNotStarted()
             }
@@ -35,11 +51,20 @@ class SimpleWebSocketActor(clientActorRef: ActorRef) extends Actor {
                     myGame.updateState()
                     val json: JsValue = myGame.toJson(clientMessage)
                     clientActorRef ! (json)    
+                } else if(clientMessage == "h"){
+                    val json: JsValue = Json.parse(s"""{"history": "(hint) ${hints(hintNumber)}"}""")
+                    if(hintNumber < hints.length - 1){hintNumber += 1}
+                    clientActorRef ! (json) 
                 }else{
                     //todo error message to help player with bad messgaes.
                     val json: JsValue = Json.parse(s"""{"history": "'$clientMessage' is not a valid action"}""")
                     clientActorRef ! (json) 
                 }
+            }
+
+            if(!myGame.hasStarted){
+                timer.cancel()
+                isTimerStarted = false
             }
 
     }
@@ -55,15 +80,14 @@ class SimpleWebSocketActor(clientActorRef: ActorRef) extends Actor {
 
     // start in game time and send to client
     def startInGameTimeAndMessages() = {
-        val t = new java.util.Timer()
-        val task = new java.util.TimerTask {
-        def run() = {
+        timer = new java.util.Timer()
+        taskSendingInGameTime = new java.util.TimerTask {
+            def run() = {
                         sendInGameTime(inGameTime)
                         inGameTime += 1
                 }
         }
-        t.schedule(task, 1000L, 1000L)
-        //task.cancel()
+        timer.schedule(taskSendingInGameTime, 1000L, 1000L)
     }
 
     // send the in game time to the client to update the game view

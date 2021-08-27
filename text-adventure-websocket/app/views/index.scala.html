@@ -116,6 +116,9 @@
 
     // append “server” messages to the `message-content` div above
     function appendServerMessageToView(message) {
+        if (message == "start"){
+            $('span', "#message-history").empty().remove();    
+        }
         $("#message-history").append("<span>" + "> " + message + "<br /></span>");
     }
 
